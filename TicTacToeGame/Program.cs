@@ -1,7 +1,12 @@
+using TicTacToeGame.Helpers;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new TwoDArrayConverter());
+});
 
 var app = builder.Build();
 
