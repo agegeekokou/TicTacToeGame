@@ -47,48 +47,6 @@
                     });
             }
 
-
-            // function makeMove(row, col) {
-            //     fetch("/api/game/move", {
-            //         method: "POST",
-            //         headers: { 
-            //             "Content-Type": "application/json",
-            //             'Accept': '*/*'
-            //         },
-            //         body: JSON.stringify(
-            //         { 
-            //             row, 
-            //             col, 
-            //             player: currentPlayer
-            //         })
-            //     })
-                    // .then(response => response.json())
-                    // .then(data => {
-                    //     console.log("Response from server:", data);
-                    //     renderBoard(data.board);
-                    //     renderScores(data.score);  // Update the displayed scores
-
-                    //     if (data.isWin) {
-                    //         alert(`${currentPlayer} wins!`);
-                    //         // Optionally, reset the game after a win
-                    //         resetGame();
-                    //     } else if (data.isDraw) {
-                    //         alert("It's a draw!");
-                    //         resetGame();
-                    //     } else {
-                    //         console.log("Before switch:", currentPlayer); // Check currentPlayer before switching
-                    //         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-                    //         console.log("After switch:", currentPlayer); // Check currentPlayer after switching
-
-                    //     }
-                    // })
-            //         .catch(error => console.error("Move error:", error));
-
-            //     console.log(`currentPlayer: ${currentPlayer}, row: ${row}, col: ${col}`);
-            //     console.log("Board after move:", board);
-
-            // }
-
             function makeMove(row, col) {
                 fetch("/api/game/move", {
                     method: "POST",
@@ -108,6 +66,7 @@
                     if (data.isWin) {
                         // Highlight winning cells
                         highlightWinningCells(data.winningCells);
+               
                         setTimeout(() => {
                             alert(`${currentPlayer} wins!`);
                             resetGame();
@@ -121,15 +80,32 @@
                 });
             }
 
-        function highlightWinningCells(winningCells) {
-            winningCells.forEach(([row, col]) => {
-                const cell = document.querySelector(
-                    `#board > div:nth-child(${row + 1}) > button:nth-child(${col + 1})`
-                );
-                cell.classList.add("winner");
-            });
-        }
+            function highlightWinningCells(winningCells) {
+                if (!Array.isArray(winningCells) || winningCells.length === 0) {
+                    console.error("Invalid or empty winningCells array:", winningCells);
+                    return;
+                }
 
+                winningCells.forEach((cell) => {
+                    // Extract row and col from the object
+                    const { row, col } = cell;
+                    if (row === undefined || col === undefined) {
+                        console.error("Invalid cell object:", cell);
+                        return;
+                    }
+
+                    // Select the corresponding button
+                    const button = document.querySelector(
+                        `#board > div:nth-child(${row + 1}) > button:nth-child(${col + 1})`
+                    );
+
+                    if (button) {
+                        button.classList.add("winner");
+                    } else {
+                        console.error("Button not found for row:", row, "col:", col);
+                    }
+                });
+            }
 
             function resetGame() {
                 fetch("/api/game/reset", 
@@ -139,7 +115,6 @@
                 })
                     .then(() => initGame());
             }
-
 
             function renderBoard(board) {
                 const boardContainer = document.getElementById("board");
@@ -170,9 +145,6 @@
                 } else {
                     console.error("Score data is missing or undefined:", score);
                 }
-
-                console.log("score.PlayerX: ", score.playerX);
-                console.log("score.PlayerO: ", score.playerO);
             }
 
             document.getElementById("resetButton").addEventListener("click", resetGame);
