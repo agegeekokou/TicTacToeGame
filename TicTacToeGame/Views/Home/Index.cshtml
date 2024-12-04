@@ -4,91 +4,139 @@
     ViewData["Title"] = "Home Page";
 }
 
-
-<div class="container">
-    <div class="text-center mt-5">
-        <h1>Tic Tac Toe Game</h1>
+<body style="margin:0;"> 
+    <div class="container mt-5" style="background-color: lightblue; min-height: 53vh;">
+        <div class="text-center">
+            <h1>Tic Tac Toe Game</h1>
+        </div>
+        <div class="d-flex justify-content-center mt-5">
+            <button class="p-2" id="resetButton">Reset Game</button>
+        </div>
+        <div class="d-flex flex-column align-items-center mt-5">
+            <div id="scorePlayerX">0</div>
+            <div id="scorePlayerO">0</div>
+        </div>
+        <div id="board" class="mt-5">
+       
+        </div>   
     </div>
-    <div class="d-flex justify-content-center mt-5">
-        <button class="p-2" id="resetButton">X</button>
-        <button class="p-2">O</button>
-    </div>
-    <div class="d-flex flex-column align-items-center mt-5">
-
-        <h4 id="scorePlayerX">Score Player-X: 0</h4>
-        <br />
-        <h4 id="scorePlayerO">Score Player-O: 0</h4>
-               
-    </div>
-    <div id="board" class="mt-5">
-      
-    </div>   
-</div>
+</body>
 
 @section Scripts{
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const boardContainer = document.getElementById("board");
             let currentPlayer = 'X';
-
-            function renderScores(score) {
-                if (score) {
-                    document.getElementById("scorePlayerX").innerText = `Score Player-X: ${score.PlayerX}`;
-                    document.getElementById("scorePlayerO").innerText = `Score Player-O: ${score.PlayerO}`;
-                } else {
-                    console.error("Score data is missing or undefined:", score);
-                }
-            }
-
+           
 
             function initGame() {
-                fetch("/api/game/init", { method: "POST" })
+                fetch("/api/game/init", { 
+                    method: "POST",
+                     headers: { 'Content-Type': 'application/json' }
+                })
                     .then(response => response.json())
                     .then(data => {
                         currentPlayer = data.currentPlayer;
+                        board = data.board;
+                        score = data.score;
+                        console.log("Response from server:", data);
                         renderBoard(data.board);
+                        renderScores(data.score); // Bind the scores
+                                  
+                        console.log("data.score:", data.score);
                     });
             }
 
 
+            // function makeMove(row, col) {
+            //     fetch("/api/game/move", {
+            //         method: "POST",
+            //         headers: { 
+            //             "Content-Type": "application/json",
+            //             'Accept': '*/*'
+            //         },
+            //         body: JSON.stringify(
+            //         { 
+            //             row, 
+            //             col, 
+            //             player: currentPlayer
+            //         })
+            //     })
+                    // .then(response => response.json())
+                    // .then(data => {
+                    //     console.log("Response from server:", data);
+                    //     renderBoard(data.board);
+                    //     renderScores(data.score);  // Update the displayed scores
+
+                    //     if (data.isWin) {
+                    //         alert(`${currentPlayer} wins!`);
+                    //         // Optionally, reset the game after a win
+                    //         resetGame();
+                    //     } else if (data.isDraw) {
+                    //         alert("It's a draw!");
+                    //         resetGame();
+                    //     } else {
+                    //         console.log("Before switch:", currentPlayer); // Check currentPlayer before switching
+                    //         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                    //         console.log("After switch:", currentPlayer); // Check currentPlayer after switching
+
+                    //     }
+                    // })
+            //         .catch(error => console.error("Move error:", error));
+
+            //     console.log(`currentPlayer: ${currentPlayer}, row: ${row}, col: ${col}`);
+            //     console.log("Board after move:", board);
+
+            // }
+
             function makeMove(row, col) {
                 fetch("/api/game/move", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ row, col, player: currentPlayer })
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ row, col, player: currentPlayer }),
                 })
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log("Response from server:", data);
-                        renderBoard(data.board);
-                        renderScores(data.score);  // Update the displayed scores
+                .then((response) => response.json())
+                .then((data) => {
+                    renderBoard(data.board);
+                    renderScores(data.score);
 
-                        if (data.isWin) {
+                    console.log("Response from server:", data); 
+                    console.log("Winning cells:", data.winningCells);
+
+                    if (data.isWin) {
+                        // Highlight winning cells
+                        highlightWinningCells(data.winningCells);
+                        setTimeout(() => {
                             alert(`${currentPlayer} wins!`);
-                            // Optionally, reset the game after a win
                             resetGame();
-                        } else if (data.isDraw) {
-                            alert("It's a draw!");
-                            resetGame();
-                        } else {
-                            // Switch turns if no win or draw
-                            //currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-
-                            console.log("Before switch:", currentPlayer); // Check currentPlayer before switching
-                            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-                            console.log("After switch:", currentPlayer); // Check currentPlayer after switching
-
-                        }
-                    })
-                    .catch(error => console.error("Move error:", error));
-
-                console.log(`currentPlayer: ${currentPlayer}, row: ${row}, col: ${col}`);
-                console.log("Board after move:", board);
-
+                        }, 2000); // Delay for animation
+                    } else if (data.isDraw) {
+                        alert("It's a draw!");
+                        resetGame();
+                    } else {
+                        currentPlayer = currentPlayer === "X" ? "O" : "X";
+                    }
+                });
             }
 
+        function highlightWinningCells(winningCells) {
+            winningCells.forEach(([row, col]) => {
+                const cell = document.querySelector(
+                    `#board > div:nth-child(${row + 1}) > button:nth-child(${col + 1})`
+                );
+                cell.classList.add("winner");
+            });
+        }
+
+
             function resetGame() {
-                fetch("/api/game/reset", { method: "POST" })
+                fetch("/api/game/reset", 
+                { 
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' }
+                })
                     .then(() => initGame());
             }
 
@@ -106,18 +154,25 @@
                         cell.classList.add("p-3", "cell"); // Style each cell as needed
                         cell.innerText = board[row][col] || ""; // Display "X" or "O" if present, or leave blank
 
-                        // // Set the text content based on the board state at [row][col]
-                        // cell.innerText = board[row][col] !== '\0' ? board[row][col] : "";
-
                         cell.addEventListener("click", () => makeMove(row, col)); // Attach click event to handle move
                         rowDiv.appendChild(cell); // Append each cell to the current row
-
-                        //console.log(`Cell [${row}, ${col}] value:`, board[row][col]);
                     }
 
                     boardContainer.appendChild(rowDiv); // Append each row to the board container
                 }
                 console.log(board);
+            }
+
+            function renderScores(score) {
+                if (score) {
+                    document.getElementById('scorePlayerX').innerText = `Score Player-X: ${score.playerX}`; 
+                    document.getElementById('scorePlayerO').innerText = `Score Player-O: ${score.playerO}`;
+                } else {
+                    console.error("Score data is missing or undefined:", score);
+                }
+
+                console.log("score.PlayerX: ", score.playerX);
+                console.log("score.PlayerO: ", score.playerO);
             }
 
             document.getElementById("resetButton").addEventListener("click", resetGame);

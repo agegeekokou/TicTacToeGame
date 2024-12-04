@@ -20,3 +20,26 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+header {
+    margin: 0; 
+    padding: 0;
+}
+
+.winner {
+    animation: pulse 1s infinite alternate;
+    background-color: yellow !important;
+    color: red;
+}
+
+@keyframes pulse {
+    from {
+        transform: scale(1);
+    }
+
+    to {
+        transform: scale(1.2);
+    }
+}
+
+

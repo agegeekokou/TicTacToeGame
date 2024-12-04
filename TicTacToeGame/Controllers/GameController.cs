@@ -10,7 +10,8 @@ namespace TicTacToeGame.Controllers
     {
         private static char[,] board = new char[3, 3];
         private static char currentPlayer = 'X';
-        private static Score score = new Score(); 
+        private static readonly Score score = new Score();
+       
 
         public GameController()
         {
@@ -22,6 +23,7 @@ namespace TicTacToeGame.Controllers
         {
             ResetBoard();
             currentPlayer = 'X';
+
             return Ok(new { board, currentPlayer, score });
         }
 
@@ -31,7 +33,10 @@ namespace TicTacToeGame.Controllers
             if (board[move.Row, move.Col] == '\0')
             {
                 board[move.Row, move.Col] = currentPlayer;
-                bool isWin = CheckWin(board, currentPlayer);
+                //bool isWin = CheckWin(board, currentPlayer);
+                var (isWin, winningCells) = CheckWin(board, currentPlayer);
+                //return Ok(new { board, currentPlayer, isWin, isDraw, score, winningCells });
+
                 // Check for a draw if no win
                 bool isDraw = !isWin && IsBoardFull(board);
 
@@ -50,7 +55,8 @@ namespace TicTacToeGame.Controllers
                     currentPlayer = currentPlayer == 'X' ? 'O' : 'X',
                     isWin,
                     isDraw,
-                    score
+                    score,
+                    winningCells
                 };
 
                 if (!isWin && !isDraw)
@@ -67,6 +73,7 @@ namespace TicTacToeGame.Controllers
         {
             ResetBoard();
             currentPlayer = 'X';
+
             return Ok(new { board, currentPlayer, score });
         }
 
@@ -76,14 +83,53 @@ namespace TicTacToeGame.Controllers
         }
 
 
-        private bool CheckWin(char[,] board, char player)
+        //private bool CheckWin(char[,] board, char player)
+        //{
+        //    // Check rows
+        //    for (int row = 0; row < 3; row++)
+        //    {
+        //        if (board[row, 0] == player && board[row, 1] == player && board[row, 2] == player)
+        //        {
+        //            return true;
+        //        }
+        //    }
+
+            //// Check columns
+            //for (int col = 0; col < 3; col++)
+            //{
+            //    if (board[0, col] == player && board[1, col] == player && board[2, col] == player)
+            //    {
+            //        return true;
+            //    }
+            //}
+
+            //// Check diagonals
+            //if (board[0, 0] == player && board[1, 1] == player && board[2, 2] == player)
+            //{
+            //    return true;
+            //}
+            //if (board[0, 2] == player && board[1, 1] == player && board[2, 0] == player)
+            //{
+            //    return true;
+            //}
+
+        //    // If no win found
+        //    return false;
+        //}
+
+        private (bool isWin, List<(int, int)> winningCells) CheckWin(char[,] board, char player)
         {
+            var winningCells = new List<(int, int)>();
+
             // Check rows
             for (int row = 0; row < 3; row++)
             {
                 if (board[row, 0] == player && board[row, 1] == player && board[row, 2] == player)
                 {
-                    return true;
+                    winningCells.Add((row, 0));
+                    winningCells.Add((row, 1));
+                    winningCells.Add((row, 2));
+                    return (true, winningCells);
                 }
             }
 
@@ -92,23 +138,32 @@ namespace TicTacToeGame.Controllers
             {
                 if (board[0, col] == player && board[1, col] == player && board[2, col] == player)
                 {
-                    return true;
+                    winningCells.Add((0, col));
+                    winningCells.Add((1, col));
+                    winningCells.Add((2, col));
+                    return (true, winningCells);
                 }
             }
 
             // Check diagonals
             if (board[0, 0] == player && board[1, 1] == player && board[2, 2] == player)
             {
-                return true;
+                winningCells.Add((0, 0));
+                winningCells.Add((1, 1));
+                winningCells.Add((2, 2));
+                return (true, winningCells);
             }
             if (board[0, 2] == player && board[1, 1] == player && board[2, 0] == player)
             {
-                return true;
+                winningCells.Add((0, 2));
+                winningCells.Add((1, 1));
+                winningCells.Add((2, 0));
+                return (true, winningCells);
             }
 
-            // If no win found
-            return false;
+            return (false, winningCells);
         }
+
 
 
         // Helper method to check if the board is full (for a draw)
@@ -120,7 +175,5 @@ namespace TicTacToeGame.Controllers
             }
             return true;
         }
-
-
     }
 }
