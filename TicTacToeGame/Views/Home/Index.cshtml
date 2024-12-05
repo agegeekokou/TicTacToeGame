@@ -27,6 +27,32 @@
         document.addEventListener("DOMContentLoaded", function () {
             const boardContainer = document.getElementById("board");
             let currentPlayer = 'X';
+
+            // Load sound effects
+            const moveSound = new Audio('/sounds/move.mp3');
+            const winSound = new Audio('/sounds/win.mp3');
+            const drawSound = new Audio('/sounds/draw.mp3');
+            const resetSound = new Audio('/sounds/reset.mp3');
+
+            // Play move sound when a player makes a move
+            function playMoveSound() {
+                moveSound.play();
+            }
+
+            // Play win sound
+            function playWinSound() {
+                winSound.play();
+            }
+
+            // Play draw sound
+            function playDrawSound() {
+                drawSound.play();
+            }
+
+            // Play reset sound
+            function playResetSound() {
+                resetSound.play();
+            }
            
 
             function initGame() {
@@ -34,17 +60,18 @@
                     method: "POST",
                      headers: { 'Content-Type': 'application/json' }
                 })
-                    .then(response => response.json())
-                    .then(data => {
-                        currentPlayer = data.currentPlayer;
-                        board = data.board;
-                        score = data.score;
-                        console.log("Response from server:", data);
-                        renderBoard(data.board);
-                        renderScores(data.score); // Bind the scores
+                .then(response => response.json())
+                .then(data => {
+                    playResetSound();
+                    currentPlayer = data.currentPlayer;
+                    board = data.board;
+                    score = data.score;
+                    console.log("Response from server:", data);
+                    renderBoard(data.board);
+                    renderScores(data.score); // Bind the scores
                                   
-                        console.log("data.score:", data.score);
-                    });
+                    console.log("data.score:", data.score);
+                });
             }
 
             function makeMove(row, col) {
@@ -64,18 +91,21 @@
                     console.log("Winning cells:", data.winningCells);
 
                     if (data.isWin) {
+                        playWinSound();
                         // Highlight winning cells
                         highlightWinningCells(data.winningCells);
                
                         setTimeout(() => {
                             alert(`${currentPlayer} wins!`);
                             resetGame();
-                        }, 2000); // Delay for animation
+                        }, 1000); // Delay for animation
                     } else if (data.isDraw) {
+                        playDrawSound();
                         alert("It's a draw!");
                         resetGame();
                     } else {
                         currentPlayer = currentPlayer === "X" ? "O" : "X";
+                        playMoveSound();
                     }
                 });
             }
@@ -147,7 +177,12 @@
                 }
             }
 
-            document.getElementById("resetButton").addEventListener("click", resetGame);
+            //document.getElementById("resetButton").addEventListener("click", resetGame);
+
+            document.getElementById("resetButton").addEventListener("click", () => {
+                playResetSound(); // Play reset sound
+                resetGame();
+            });
 
             initGame();
         });
