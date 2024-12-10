@@ -6,8 +6,8 @@
 
 <body style="margin:0;"> 
     <div class="container mt-5" style="background-color: lightblue; min-height: 53vh;">
-        <div class="text-center">
-            <h1>Tic Tac Toe Game</h1>
+        <div class="text-center pt-3">
+            <h2>Tic Tac Toe Game</h2>
         </div>
         <div class="d-flex justify-content-center mt-5">
             <button class="p-2" id="resetButton">Reset Game</button>
@@ -22,7 +22,8 @@
     </div>
 </body>
 
-@section Scripts{
+
+@section Scripts{   
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const boardContainer = document.getElementById("board");
@@ -53,7 +54,10 @@
             function playResetSound() {
                 resetSound.play();
             }
-           
+
+            // function confetti() {
+
+            // }
 
             function initGame() {
                 fetch("/api/game/init", { 
@@ -94,11 +98,23 @@
                         playWinSound();
                         // Highlight winning cells
                         highlightWinningCells(data.winningCells);
+
+                        // Trigger confetti animation
+                        console.log("Launching confetti animation!");
+                        confetti({
+                            particleCount: 100, // Number of confetti pieces
+                            spread: 70,         // Spread angle of confetti
+                            origin: { x: 0.5, y: 0.5 }, // Launch from the center
+                            colors: ['#bb0000', '#ffffff', '#00bb00'] // Custom colors
+                        });
+
+                         alert(`${currentPlayer} wins!`);
+                         resetGame();
                
-                        setTimeout(() => {
-                            alert(`${currentPlayer} wins!`);
-                            resetGame();
-                        }, 1000); // Delay for animation
+                        // setTimeout(() => {
+                        //     alert(`${currentPlayer} wins!`);
+                        //     resetGame();
+                        // }, 1000); // Delay for animation
                     } else if (data.isDraw) {
                         playDrawSound();
                         alert("It's a draw!");
@@ -136,6 +152,7 @@
                     }
                 });
             }
+
 
             function resetGame() {
                 fetch("/api/game/reset", 
