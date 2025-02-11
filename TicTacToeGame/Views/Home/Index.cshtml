@@ -1,24 +1,29 @@
 ﻿@model TicTacToeGame.Models.Score
 
+
 @{
     ViewData["Title"] = "Home Page";
 }
 
 <body style="margin:0;"> 
     <div class="container mt-5" style="background-color: lightblue; min-height: 53vh;">
-        <div class="text-center pt-3">
+        <div class="text-center pt-5">
             <h2>Tic Tac Toe Game</h2>
         </div>
-        <div class="d-flex justify-content-center mt-5">
+        <div class="d-flex justify-content-center mt-3">
             <button class="p-2" id="resetButton">Reset Game</button>
         </div>
-        <div class="d-flex flex-column align-items-center mt-5">
+        <div class="d-flex flex-column align-items-center mt-3">
             <div id="scorePlayerX">0</div>
             <div id="scorePlayerO">0</div>
         </div>
-        <div id="board" class="mt-5">
+        <div id="board" class="mt-3">
        
         </div>   
+        <div class="d-flex justify-content-center mt-3">
+            <button id="pvpButton" onclick="selectMode('PlayerVsPlayer')">Player vs Player</button>
+            <button id="pvcButton" onclick="selectMode('PlayerVsComputer')">Player vs Computer</button>
+        </div>
     </div>
 </body>
 
@@ -55,9 +60,27 @@
                 resetSound.play();
             }
 
-            // function confetti() {
+           
+            let mode = "PlayerVsPlayer"; // Default mode
 
-            // }
+            document.getElementById("pvpButton").addEventListener("click", () => {
+                mode = "PlayerVsPlayer";
+                selectMode(mode);
+                resetGame(); // Reset the board
+
+                //makeMove();
+            });
+
+            document.getElementById("pvcButton").addEventListener("click", () => {
+                mode = "PlayerVsComputer";
+                selectMode(mode);
+                
+                resetGame();
+                //makeMove();
+                // setTimeout(() => {
+                //     makeMove(); // Indicate no move for the player; let the server decide
+                // }, 500); // Allow slight delay for clarity
+            });
 
             function initGame() {
                 fetch("/api/game/init", { 
@@ -78,53 +101,166 @@
                 });
             }
 
+            // const moveRequest = {
+            //     row: Row,
+            //     col: Col,
+            //     playerVsPlayer: mode === "PlayerVsPlayer",
+            //     playerVsComputer: mode === "PlayerVsComputer"
+            // };
+            let isProcessingMove = false;
+
             function makeMove(row, col) {
+                if (isProcessingMove) return; // Block duplicate requests
+                isProcessingMove = true;
+
+                const bodyData = {
+                    row: row ?? null,
+                    col: col ?? null,
+                    player: currentPlayer,
+                    playerVsComputer: mode === "PlayerVsComputer",
+                    playerVsPlayer: mode === "PlayerVsPlayer"
+                };
+                console.log("Sending request to backend:", bodyData);
+
                 fetch("/api/game/move", {
                     method: "POST",
                     headers: {
-                        "Content-Type": "application/json",
+                        "Content-Type": "application/json"
                     },
-                    body: JSON.stringify({ row, col, player: currentPlayer }),
+                    body: JSON.stringify(bodyData)
                 })
-                .then((response) => response.json())
+                //.then((response) => response.json())
+                .then((response) => {
+                    if (!response.ok) {
+                        console.error("Failed request:", response);
+                        return response.text().then((text) => {
+                            console.error("Error response from server:", text);
+                            throw new Error(text);
+                        });
+                    }
+                    return response.json();
+                })
                 .then((data) => {
+                    console.log("Response from server:", data);
+
                     renderBoard(data.board);
                     renderScores(data.score);
 
-                    console.log("Response from server:", data); 
-                    console.log("Winning cells:", data.winningCells);
-
-                    if (data.isWin) {
+                    if (data.isWin || data.isWinPlayer) {
                         playWinSound();
-                        // Highlight winning cells
                         highlightWinningCells(data.winningCells);
-
-                        // Trigger confetti animation
-                        console.log("Launching confetti animation!");
-                        confetti({
-                            particleCount: 100, // Number of confetti pieces
-                            spread: 70,         // Spread angle of confetti
-                            origin: { x: 0.5, y: 0.5 }, // Launch from the center
-                            colors: ['#bb0000', '#ffffff', '#00bb00'] // Custom colors
-                        });
-
-                         alert(`${currentPlayer} wins!`);
-                         resetGame();
-               
-                        // setTimeout(() => {
-                        //     alert(`${currentPlayer} wins!`);
-                        //     resetGame();
-                        // }, 1000); // Delay for animation
-                    } else if (data.isDraw) {
+                        highlightWinningCells(data.winningCellsPlayer);
+                        setTimeout(() => {
+                            alert(`${currentPlayer} wins!`);
+                            resetGame();
+                        }, 1000);
+                    } else if (data.isDraw || data.isDrawPlayer) {
                         playDrawSound();
                         alert("It's a draw!");
                         resetGame();
                     } else {
-                        currentPlayer = currentPlayer === "X" ? "O" : "X";
-                        playMoveSound();
+                        // Handle computer's move after player's move
+                        if (mode === "PlayerVsComputer" && currentPlayer === "X") {
+                            makeMove(row, col);
+                            playMoveSound();
+                            // Switch to computer's turn
+                            currentPlayer = currentPlayer === "X" ? "O" : "X";
+                            //currentPlayer = data.currentPlayer;
+                        if(mode === "PlayerVsComputer" && currentPlayer === "O"){
+                              setTimeout(() => {
+                                makeMove(row, col); // Call makeMove without row and col for the computer 
+                                playMoveSound();
+                            }, 1000); // Add a slight delay for clarity
+                            playMoveSound();
+                        }                          
+                        } else {
+                            currentPlayer = currentPlayer === "X" ? "O" : "X";
+                            //currentPlayer = data.currentPlayer;
+                            playMoveSound();
+                        }
                     }
+                })
+                .catch((error) => console.error("Error during move:", error))
+                .finally(() => {
+                    isProcessingMove = false; // Allow the next move
                 });
             }
+
+
+            // function makeMove(row, col) {
+            //     if (mode === "PlayerVsComputer") {
+            //         if (typeof row === "undefined" || typeof col === "undefined") {
+            //             console.error("Invalid move coordinates:", { row, col });
+            //             //return; // Prevent sending an invalid request
+            //         }
+
+            //         fetch("/api/game/move", {
+            //             method: "POST",
+            //             headers: { "Content-Type": "application/json" },
+            //             body: JSON.stringify(
+            //             {
+            //                 row: row,
+            //                 col: col,
+            //                 player: currentPlayer,
+            //                 playerVsComputer: mode === "PlayerVsComputer",
+            //                 playerVsPlayer: mode === "PlayerVsPlayer"
+            //             })
+                //     })
+                //     .then(response => response.json())
+                //     .then(data => {
+                //         console.log("Computer move response:", data);
+                //         const { row, col } = data; // Assuming the server sends the computer's move
+                //         makeMove(row, col); // Use the computer's move coordinates
+
+                //         renderBoard(data.board);
+                //         renderScores(data.score);
+                //     });
+                // }
+
+                // fetch("/api/game/move", {
+                //     method: "POST",
+                //     headers: {
+                //         "Content-Type": "application/json"
+                //     },
+                //     body: JSON.stringify(
+                //     {
+                //         row: row,
+                //         col: col,
+                //         player: currentPlayer,
+                //         playerVsComputer: mode === "PlayerVsComputer",
+                //         playerVsPlayer: mode === "PlayerVsPlayer"
+                //     })
+                // })
+                // .then((response) => response.json())
+                // .then((data) => {
+                //     renderBoard(data.board);
+                //     renderScores(data.score);
+
+                //     console.log("Response from server:", data); 
+                //     console.log("Winning cells:", data.winningCells);
+                //     console.log('Current player:', data.currentPlayer);
+                //     console.log("Sending move request:", { row, col, playerVsComputer: mode === "PlayerVsComputer" });
+
+
+                //     if (data.isWin) {
+                //         playWinSound();
+                //         Highlight winning cells
+                //         highlightWinningCells(data.winningCells);
+               
+            //             setTimeout(() => {
+            //                 alert(`${currentPlayer} wins!`);
+            //                 resetGame();
+            //             }, 1000); // Delay for animation
+            //         } else if (data.isDraw) {
+            //             playDrawSound();
+            //             alert("It's a draw!");
+            //             resetGame();
+            //         } else {
+            //             currentPlayer = currentPlayer === "X" ? "O" : "X";
+            //             playMoveSound();
+            //         }
+            //     });
+            // }
 
             function highlightWinningCells(winningCells) {
                 if (!Array.isArray(winningCells) || winningCells.length === 0) {
@@ -153,6 +289,27 @@
                 });
             }
 
+            function selectMode(mode) {
+                // Get the buttons
+                const pvpButton = document.getElementById("pvpButton");
+                const pvcButton = document.getElementById("pvcButton");
+
+                // Remove 'selected' class from both buttons
+                pvpButton.classList.remove("selected");
+                pvcButton.classList.remove("selected");
+
+                // Add 'selected' class to the clicked button
+                if (mode === "PlayerVsPlayer") {
+                    pvpButton.classList.add("selected");
+                } else if (mode === "PlayerVsComputer") {
+                    pvcButton.classList.add("selected");
+                }
+
+                // Update the game mode (if needed)
+                //gameMode = mode; // Ensure this matches your existing game logic
+            }
+
+
 
             function resetGame() {
                 fetch("/api/game/reset", 
@@ -175,8 +332,43 @@
                         const cell = document.createElement("button");
                         cell.classList.add("p-3", "cell"); // Style each cell as needed
                         cell.innerText = board[row][col] || ""; // Display "X" or "O" if present, or leave blank
+                        cell.classList.toggle("disabled", board[row][col] !== null); // Disable occupied cells
 
-                        cell.addEventListener("click", () => makeMove(row, col)); // Attach click event to handle move
+                        // // Check if board[row] exists before accessing board[row][col]
+                        // const cellValue = (board[row] && board[row][col]) ? board[row][col] : "";
+                        // cell.innerText = cellValue;
+
+                        //cell.addEventListener("click", () => makeMove(row, col)); // Attach click event to handle move
+                        cell.addEventListener("click", () => {
+                            if(mode === "PlayerVsComputer" && currentPlayer === "X"){
+                                makeMove(row, col);
+                                console.log(`Calling makeMove with row: ${row}, col: ${col}`);
+                                console.log(`Current Player: ${currentPlayer}`);
+                                playMoveSound();
+                            }
+
+                            if (mode === "PlayerVsComputer" && currentPlayer === "O") {
+                                console.log("It's the computer's turn. Ignoring clicks.");
+                                console.log(`Current Player: ${currentPlayer}`);
+
+                                makeMove(row, col);
+                                playMoveSound();
+                                return; // Block clicks during the computer's turn
+                            }
+
+                            if (mode === "PlayerVsPlayer" || board[row][col] === "") { // Ensure valid moves only
+                                makeMove(row, col);
+                            } else {
+                                console.warn("Invalid move: cell already occupied");
+                            }
+                        });
+                        //&& currentPlayer === "O"
+                        // cell.addEventListener("click", () => {
+                        //     if (mode !== "PlayerVsComputer" || board[row][col] === "") {
+                        //         makeMove(row, col); // Prevent invalid moves
+                        //     }
+                        // });
+
                         rowDiv.appendChild(cell); // Append each cell to the current row
                     }
 

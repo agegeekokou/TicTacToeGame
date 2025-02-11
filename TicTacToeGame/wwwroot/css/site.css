@@ -42,5 +42,10 @@ header {
     }
 }
 
+.selected {
+    background-color: lightgreen;
+    border: 2px solid green; /* Optional: Add a border for better visibility */
+}
+
 
 
