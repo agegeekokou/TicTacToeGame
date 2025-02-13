@@ -15,7 +15,6 @@ namespace TicTacToeGame.Controllers
         private static char[,] board = new char[3, 3];
         private static char currentPlayer = 'X';
         private static readonly Score score = new Score();
-       
 
         public GameController()
         {
@@ -83,10 +82,8 @@ namespace TicTacToeGame.Controllers
                     }
                 }
                 // Computer's move
-                //ComputerMove();
                 if (currentPlayer == 'O')
                 {
-                    //ComputerMove();
                     var (row, col) = ComputerMove();
                     Console.WriteLine($"Computer move: Row={row}, Col={col}");
 
@@ -180,8 +177,6 @@ namespace TicTacToeGame.Controllers
 
                 return BadRequest("Cell already occupied.");
             }
-            
-            //return BadRequest("Cell already occupied.");
         }
 
         [HttpPost("reset")]
@@ -259,83 +254,6 @@ namespace TicTacToeGame.Controllers
             }
             return true;
         }
-
-        //private static (int selectedRow, int selectedCol) ComputerMove()
-        //{
-        //    // Find all empty cells on the board
-        //    List<Dictionary<string, int>> emptyCells = new List<Dictionary<string, int>>();
-        //    int selectedRow = 0;
-        //    int selectedCol = 0;
-
-        //    for (int row = 0; row < 3; row++)
-        //    {
-        //        for (int col = 0; col < 3; col++)
-        //        {
-        //            if (board[row, col] == '\0') // Check if the cell is empty
-        //            {
-        //                emptyCells.Add(new Dictionary<string, int> { { "row", row }, { "col", col } });
-        //            }
-        //        }
-        //    }
-
-        //    // Check if there are any empty cells left
-        //    if (emptyCells.Count > 0)
-        //    {
-        //        // Select a random cell for the computer's move
-        //        Random random = new Random();
-        //        int randomIndex = random.Next(emptyCells.Count);
-        //        selectedRow = emptyCells[randomIndex]["row"];
-        //        selectedCol = emptyCells[randomIndex]["col"];
-
-        //        // Place 'O' (computer's move) on the board
-        //        board[selectedRow, selectedCol] = 'O';
-
-        //        return (selectedRow, selectedCol);
-        //    }
-
-        //    return (selectedRow, selectedCol);
-        //}
-
-        //private static (int selectedRow, int selectedCol) ComputerMove()
-        //{
-        //    // Find all empty cells on the board
-        //    List<(int row, int col)> emptyCells = new List<(int row, int col)>();
-
-        //    for (int row = 0; row < 3; row++)
-        //    {
-        //        for (int col = 0; col < 3; col++)
-        //        {
-        //            if (board[row, col] == '\0') // Check if the cell is empty
-        //            {
-        //                emptyCells.Add((row, col));
-        //            }
-        //        }
-        //    }
-
-        //    // Check if there are any empty cells left
-        //    if (emptyCells.Count > 0)
-        //    {
-        //        // Select a random empty cell
-        //        Random random = new Random();
-        //        int randomIndex = random.Next(emptyCells.Count);
-
-                // Get the row and column of the selected cell
-        //        var (selectedRow, selectedCol) = emptyCells[randomIndex];
-
-        //        // Place 'O' (computer's move) on the board
-        //        board[selectedRow, selectedCol] = 'O';
-
-        //        Console.WriteLine($"Computer moved to: Row {selectedRow}, Col {selectedCol}");
-
-        //        return (selectedRow, selectedCol);
-        //    }
-        //    else
-        //    {
-        //        Console.WriteLine("No empty cells available for the computer to move.");
-
-        //        return (0, 0);
-        //    }
-        //}
 
         private (int Row, int Col) ComputerMove()
         {

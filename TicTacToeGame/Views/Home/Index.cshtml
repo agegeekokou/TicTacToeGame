@@ -1,13 +1,12 @@
 ﻿@model TicTacToeGame.Models.Score
 
-
 @{
     ViewData["Title"] = "Home Page";
 }
 
 <body style="margin:0;"> 
     <div class="container mt-5" style="background-color: lightblue; min-height: 53vh;">
-        <div class="text-center pt-5">
+        <div class="text-center pt-5" style="color: navy">
             <h2>Tic Tac Toe Game</h2>
         </div>
         <div class="d-flex justify-content-center mt-3">
@@ -59,7 +58,6 @@
             function playResetSound() {
                 resetSound.play();
             }
-
            
             let mode = "PlayerVsPlayer"; // Default mode
 
@@ -67,19 +65,12 @@
                 mode = "PlayerVsPlayer";
                 selectMode(mode);
                 resetGame(); // Reset the board
-
-                //makeMove();
             });
 
             document.getElementById("pvcButton").addEventListener("click", () => {
                 mode = "PlayerVsComputer";
-                selectMode(mode);
-                
+                selectMode(mode);                
                 resetGame();
-                //makeMove();
-                // setTimeout(() => {
-                //     makeMove(); // Indicate no move for the player; let the server decide
-                // }, 500); // Allow slight delay for clarity
             });
 
             function initGame() {
@@ -101,12 +92,6 @@
                 });
             }
 
-            // const moveRequest = {
-            //     row: Row,
-            //     col: Col,
-            //     playerVsPlayer: mode === "PlayerVsPlayer",
-            //     playerVsComputer: mode === "PlayerVsComputer"
-            // };
             let isProcessingMove = false;
 
             function makeMove(row, col) {
@@ -129,7 +114,6 @@
                     },
                     body: JSON.stringify(bodyData)
                 })
-                //.then((response) => response.json())
                 .then((response) => {
                     if (!response.ok) {
                         console.error("Failed request:", response);
@@ -151,7 +135,7 @@
                         highlightWinningCells(data.winningCells);
                         highlightWinningCells(data.winningCellsPlayer);
                         setTimeout(() => {
-                            alert(`${currentPlayer} wins!`);
+                            alert(`${data.winner} wins!`);
                             resetGame();
                         }, 1000);
                     } else if (data.isDraw || data.isDrawPlayer) {
@@ -159,23 +143,20 @@
                         alert("It's a draw!");
                         resetGame();
                     } else {
-                        // Handle computer's move after player's move
                         if (mode === "PlayerVsComputer" && currentPlayer === "X") {
                             makeMove(row, col);
                             playMoveSound();
                             // Switch to computer's turn
                             currentPlayer = currentPlayer === "X" ? "O" : "X";
-                            //currentPlayer = data.currentPlayer;
+
                         if(mode === "PlayerVsComputer" && currentPlayer === "O"){
                               setTimeout(() => {
-                                makeMove(row, col); // Call makeMove without row and col for the computer 
+                                makeMove(row, col); 
                                 playMoveSound();
                             }, 1000); // Add a slight delay for clarity
-                            playMoveSound();
                         }                          
                         } else {
                             currentPlayer = currentPlayer === "X" ? "O" : "X";
-                            //currentPlayer = data.currentPlayer;
                             playMoveSound();
                         }
                     }
@@ -185,82 +166,6 @@
                     isProcessingMove = false; // Allow the next move
                 });
             }
-
-
-            // function makeMove(row, col) {
-            //     if (mode === "PlayerVsComputer") {
-            //         if (typeof row === "undefined" || typeof col === "undefined") {
-            //             console.error("Invalid move coordinates:", { row, col });
-            //             //return; // Prevent sending an invalid request
-            //         }
-
-            //         fetch("/api/game/move", {
-            //             method: "POST",
-            //             headers: { "Content-Type": "application/json" },
-            //             body: JSON.stringify(
-            //             {
-            //                 row: row,
-            //                 col: col,
-            //                 player: currentPlayer,
-            //                 playerVsComputer: mode === "PlayerVsComputer",
-            //                 playerVsPlayer: mode === "PlayerVsPlayer"
-            //             })
-                //     })
-                //     .then(response => response.json())
-                //     .then(data => {
-                //         console.log("Computer move response:", data);
-                //         const { row, col } = data; // Assuming the server sends the computer's move
-                //         makeMove(row, col); // Use the computer's move coordinates
-
-                //         renderBoard(data.board);
-                //         renderScores(data.score);
-                //     });
-                // }
-
-                // fetch("/api/game/move", {
-                //     method: "POST",
-                //     headers: {
-                //         "Content-Type": "application/json"
-                //     },
-                //     body: JSON.stringify(
-                //     {
-                //         row: row,
-                //         col: col,
-                //         player: currentPlayer,
-                //         playerVsComputer: mode === "PlayerVsComputer",
-                //         playerVsPlayer: mode === "PlayerVsPlayer"
-                //     })
-                // })
-                // .then((response) => response.json())
-                // .then((data) => {
-                //     renderBoard(data.board);
-                //     renderScores(data.score);
-
-                //     console.log("Response from server:", data); 
-                //     console.log("Winning cells:", data.winningCells);
-                //     console.log('Current player:', data.currentPlayer);
-                //     console.log("Sending move request:", { row, col, playerVsComputer: mode === "PlayerVsComputer" });
-
-
-                //     if (data.isWin) {
-                //         playWinSound();
-                //         Highlight winning cells
-                //         highlightWinningCells(data.winningCells);
-               
-            //             setTimeout(() => {
-            //                 alert(`${currentPlayer} wins!`);
-            //                 resetGame();
-            //             }, 1000); // Delay for animation
-            //         } else if (data.isDraw) {
-            //             playDrawSound();
-            //             alert("It's a draw!");
-            //             resetGame();
-            //         } else {
-            //             currentPlayer = currentPlayer === "X" ? "O" : "X";
-            //             playMoveSound();
-            //         }
-            //     });
-            // }
 
             function highlightWinningCells(winningCells) {
                 if (!Array.isArray(winningCells) || winningCells.length === 0) {
@@ -304,12 +209,7 @@
                 } else if (mode === "PlayerVsComputer") {
                     pvcButton.classList.add("selected");
                 }
-
-                // Update the game mode (if needed)
-                //gameMode = mode; // Ensure this matches your existing game logic
             }
-
-
 
             function resetGame() {
                 fetch("/api/game/reset", 
@@ -334,11 +234,7 @@
                         cell.innerText = board[row][col] || ""; // Display "X" or "O" if present, or leave blank
                         cell.classList.toggle("disabled", board[row][col] !== null); // Disable occupied cells
 
-                        // // Check if board[row] exists before accessing board[row][col]
-                        // const cellValue = (board[row] && board[row][col]) ? board[row][col] : "";
-                        // cell.innerText = cellValue;
-
-                        //cell.addEventListener("click", () => makeMove(row, col)); // Attach click event to handle move
+                        // Attach click event to handle move
                         cell.addEventListener("click", () => {
                             if(mode === "PlayerVsComputer" && currentPlayer === "X"){
                                 makeMove(row, col);
@@ -362,12 +258,6 @@
                                 console.warn("Invalid move: cell already occupied");
                             }
                         });
-                        //&& currentPlayer === "O"
-                        // cell.addEventListener("click", () => {
-                        //     if (mode !== "PlayerVsComputer" || board[row][col] === "") {
-                        //         makeMove(row, col); // Prevent invalid moves
-                        //     }
-                        // });
 
                         rowDiv.appendChild(cell); // Append each cell to the current row
                     }
@@ -385,8 +275,6 @@
                     console.error("Score data is missing or undefined:", score);
                 }
             }
-
-            //document.getElementById("resetButton").addEventListener("click", resetGame);
 
             document.getElementById("resetButton").addEventListener("click", () => {
                 playResetSound(); // Play reset sound
