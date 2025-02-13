@@ -135,8 +135,14 @@
                         highlightWinningCells(data.winningCells);
                         highlightWinningCells(data.winningCellsPlayer);
                         setTimeout(() => {
-                            alert(`${data.winner} wins!`);
-                            resetGame();
+                            if(mode === "PlayerVsComputer"){
+                                alert(`${data.winner} wins!`);
+                                resetGame();
+                            }
+                            else{
+                                alert(`${currentPlayer} wins!`);
+                                resetGame();
+                            }                           
                         }, 1000);
                     } else if (data.isDraw || data.isDrawPlayer) {
                         playDrawSound();
